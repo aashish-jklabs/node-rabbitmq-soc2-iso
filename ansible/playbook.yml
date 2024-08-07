@@ -1,0 +1,35 @@
+- name: Configure RabbitMQ
+  hosts: rabbitmq
+  become: yes
+  tasks:
+    - name: Install RabbitMQ
+      apt:
+        name: rabbitmq-server
+        state: present
+
+    - name: Enable and start RabbitMQ service
+      service:
+        name: rabbitmq-server
+        enabled: yes
+        state: started
+
+    - name: Enable RabbitMQ management plugin
+      command: rabbitmq-plugins enable rabbitmq_management
+      notify:
+        - Restart RabbitMQ
+
+    - name: Add RabbitMQ user
+      rabbitmq_user:
+        user: "user"
+        password: "password"
+        vhost: "/"
+        state: present
+        configure_priv: ".*"
+        write_priv: ".*"
+        read_priv: ".*"
+
+  handlers:
+    - name: Restart RabbitMQ
+      service:
+        name: rabbitmq-server
+        state: restarted
